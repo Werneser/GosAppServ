@@ -13,6 +13,7 @@ import gosuslugi.database.initDatabase
 import gosuslugi.features.appointments.configureAppointmentRouting
 import gosuslugi.features.invoices.configureInvoiceRouting
 import gosuslugi.features.userinformation.configureUserInformationRouting
+import gosuslugi.features.userprofile.configureUserProfileRouting
 
 fun main() {
     initDatabase()
@@ -38,6 +39,7 @@ fun Application.module() {
     configureRegistrationRouting()
     configureLoginRouting()
     configureUserInformationRouting()
+    configureUserProfileRouting()
     configureAppointmentRouting()
     configureInvoiceRouting()
 }

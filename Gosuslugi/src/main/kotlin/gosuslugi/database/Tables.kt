@@ -9,11 +9,21 @@ object UserInformation : Table() {
     val userId = varchar("userId", 50).references(UserCredentials.userId)
     val userPhone = varchar("userPhone", 50)
     val userName = varchar("userName", 50)
+    val role = integer("role").default(0) // 0 - пользователь, 1 - сотрудник
 
     override val primaryKey = PrimaryKey(userId)
 }
 
+object UserProfile : Table() {
+    val userId = varchar("userId", 50).references(UserCredentials.userId)
+    val fullName = varchar("fullName", 255).nullable()
+    val passport = varchar("passport", 50).nullable()
+    val snils = varchar("snils", 50).nullable()
+    val phone = varchar("phone", 50).nullable()
+    val email = varchar("email", 255).nullable()
 
+    override val primaryKey = PrimaryKey(userId)
+}
 
 object UserCredentials : Table() {
     val userId = varchar("userId", 50)
@@ -50,13 +60,13 @@ object Invoices : Table() {
 
 fun createTables() {
     transaction {
-        SchemaUtils.create(Invoices, UserInformation, UserCredentials, Appointments)
+        SchemaUtils.create(Invoices, UserInformation, UserCredentials, Appointments, UserProfile)
     }
 }
 
 fun recreateTables() {
     transaction {
-        SchemaUtils.drop(Invoices, UserInformation, UserCredentials, Appointments)
-        SchemaUtils.create(Invoices, UserInformation, UserCredentials, Appointments)
+        SchemaUtils.drop(Invoices, UserInformation, UserCredentials, Appointments, UserProfile)
+        SchemaUtils.create(Invoices, UserInformation, UserCredentials, Appointments, UserProfile)
     }
 }

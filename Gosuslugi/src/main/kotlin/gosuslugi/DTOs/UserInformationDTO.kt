@@ -7,6 +7,7 @@ data class UserInformationDTO(
     val userId: String,
     val userPhone: String,
     val userName: String,
+    val role: Int = 0 
 )
 
 

@@ -46,7 +46,8 @@ fun Application.configureRegistrationRouting() {
                 userPhone = receive.phoneNumber,
                 userName = receive.userName,
                 password = receive.password,
-                login = receive.login
+                login = receive.login,
+                role = receive.role
             )
 
             registrationLogger.info("User registered successfully: ${receive.phoneNumber}")

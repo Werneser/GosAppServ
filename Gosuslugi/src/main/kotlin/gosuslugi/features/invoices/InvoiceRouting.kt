@@ -17,7 +17,6 @@ fun Application.configureInvoiceRouting() {
     val invoiceRepository = InvoiceInformationRepository()
 
     routing {
-        // Получение всех квитанций пользователя
         get("/invoices/user/{username}") {
             val username = call.parameters["username"] ?: return@get call.respond(
                 HttpStatusCode.BadRequest,
@@ -56,7 +55,6 @@ fun Application.configureInvoiceRouting() {
             )
         }
 
-        // Обновление статуса квитанции
         patch("/invoices/{id}/status") {
             val id = call.parameters["id"] ?: return@patch call.respond(
                 HttpStatusCode.BadRequest,

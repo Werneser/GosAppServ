@@ -10,11 +10,14 @@ import gosuslugi.repository.AppointmentInformationRepository
 import gosuslugi.features.appointment.AppointmentReceiveRemote
 import gosuslugi.features.appointment.AppointmentResponseRemote
 import gosuslugi.repository.AppointmentStatus
+import gosuslugi.cache.InMemoryCache
+import gosuslugi.repository.UserInformationRepository
 
 val appointmentLogger = LoggerFactory.getLogger("AppointmentRouteLogger")
 
 fun Application.configureAppointmentRouting() {
     val appointmentRepository = AppointmentInformationRepository()
+    val userRepository = UserInformationRepository()
 
     routing {
         post("/appointments") {
@@ -50,11 +53,48 @@ fun Application.configureAppointmentRouting() {
             call.respond(HttpStatusCode.OK, appointments)
         }
 
+        // Эндпоинт для получения всех заявок (только для сотрудников)
+        get("/appointments/all") {
+            val token = call.request.headers["Authorization"]
+                ?: return@get call.respond(
+                    HttpStatusCode.Unauthorized,
+                    "Token not provided"
+                )
+
+            // Получаем userId по токену
+            val userId = InMemoryCache.getUserIdByToken(token)
+                ?: return@get call.respond(
+                    HttpStatusCode.Unauthorized,
+                    "Invalid token"
+                )
+
+            // Проверяем роль пользователя
+            val userInfo = userRepository.getUserInfo(token)
+            if (userInfo == null || userInfo.role != 1) {
+                appointmentLogger.warn("Unauthorized access to all appointments by userId: $userId")
+                return@get call.respond(
+                    HttpStatusCode.Forbidden,
+                    "Access denied. Employee role required."
+                )
+            }
+
+            val appointments = appointmentRepository.getAllAppointments()
+            appointmentLogger.info("All appointments retrieved by employee: $userId")
+            call.respond(HttpStatusCode.OK, appointments)
+        }
+
         patch("/appointments/{id}/status") {
+            val token = call.request.headers["Authorization"]
+                ?: return@patch call.respond(
+                    HttpStatusCode.Unauthorized,
+                    "Token not provided"
+                )
+
             val id = call.parameters["id"] ?: return@patch call.respond(
                 HttpStatusCode.BadRequest,
                 "Missing appointment ID"
             )
+
             val status = try {
                 val statusIndex = call.request.queryParameters["status"]?.toIntOrNull()
                 AppointmentStatus.values().find { it.ordinal == statusIndex }
@@ -63,6 +103,7 @@ fun Application.configureAppointmentRouting() {
             } ?: return@patch call.respond(HttpStatusCode.BadRequest, "Missing status")
 
             appointmentRepository.updateAppointmentStatus(id, status)
+            appointmentLogger.info("Appointment $id status updated to: $status")
             call.respond(HttpStatusCode.OK, mapOf("message" to "Status updated successfully"))
         }
     }
